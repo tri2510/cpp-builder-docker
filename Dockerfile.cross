@@ -1,0 +1,46 @@
+# Multi-Architecture C++ Builder Docker Image
+# Supports: linux/amd64, linux/arm64, linux/arm/v7
+# Base: Ubuntu 24.04 with cross-compilation toolchains
+
+FROM ubuntu:24.04
+
+# Prevent interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install build essentials for host AND cross-compilation toolchains
+RUN apt-get update && apt-get install -y \
+    # Native build tools
+    build-essential \
+    cmake \
+    git \
+    ninja-build \
+    ccache \
+    gdb \
+    valgrind \
+    cppcheck \
+    # Cross-compilation toolchains (includes libstdc++ for targets)
+    gcc-aarch64-linux-gnu \
+    g++-aarch64-linux-gnu \
+    gcc-arm-linux-gnueabihf \
+    g++-arm-linux-gnueabihf \
+    qemu-user-static \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up cross-compilation toolchain files
+COPY toolchains/ /opt/cmake-toolchains/
+
+# Set working directory
+WORKDIR /project
+
+# Default build script entrypoint
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+COPY entrypoint-cross.sh /usr/local/bin/entrypoint-cross.sh
+RUN chmod +x /usr/local/bin/entrypoint-cross.sh
+
+# Create directories
+RUN mkdir -p /project/src /project/build /project/output
+
+# Default to cross-compiler entrypoint (supports native via TARGET=amd64)
+ENTRYPOINT ["/usr/local/bin/entrypoint-cross.sh"]

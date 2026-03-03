@@ -1,0 +1,26 @@
+# Compiled binaries output
+output/
+output-*/
+*.o
+*.a
+*.so
+*.exe
+
+# Build directories
+build/
+bin-debug/
+bin-release/
+
+# Docker
+.docker/
+
+# Cross-compilation
+*-arm64
+*-armhf
+*-amd64
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*~

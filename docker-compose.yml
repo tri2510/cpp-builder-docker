@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  # Standard native build
+  cpp-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./example:/project/src:ro
+      - ./output:/project/output
+
+  # Cross-compilation for ARM64 (Raspberry Pi 4/5)
+  cpp-builder-arm64:
+    build:
+      context: .
+      dockerfile: Dockerfile.cross
+    volumes:
+      - ./example:/project/src:ro
+      - ./output-arm64:/project/output
+    environment:
+      - TARGET=arm64
+    profiles:
+      - cross-compile
+
+  # Cross-compilation for ARMv7 (Raspberry Pi 2/3)
+  cpp-builder-armhf:
+    build:
+      context: .
+      dockerfile: Dockerfile.cross
+    volumes:
+      - ./example:/project/src:ro
+      - ./output-armhf:/project/output
+    environment:
+      - TARGET=armhf
+    profiles:
+      - cross-compile

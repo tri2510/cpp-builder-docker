@@ -1,0 +1,115 @@
+name: CI
+
+# Trigger on push and pull requests
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # Test native build
+  test-native:
+    name: Test Native Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build native image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: false
+          tags: cpp-builder:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build test project
+        run: |
+          docker run --rm \
+            -v $(pwd)/example:/project/src:ro \
+            -v $(pwd)/test-output:/project/output \
+            cpp-builder:test
+
+      - name: Verify binary
+        run: |
+          file test-output/hello | grep "x86-64"
+          ./test-output/hello | grep "Hello, World"
+
+  # Test cross-compiler build
+  test-cross:
+    name: Test Cross-Compiler Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build cross-compiler image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.cross
+          platforms: linux/amd64
+          push: false
+          tags: cpp-builder:cross-test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test ARM64 cross-compilation
+        run: |
+          docker run --rm \
+            -v $(pwd)/example:/project/src:ro \
+            -v $(pwd)/test-output-arm64:/project/output \
+            -e TARGET=arm64 \
+            cpp-builder:cross-test
+
+      - name: Verify ARM64 binary
+        run: |
+          file test-output-arm64/hello-arm64 | grep "ARM aarch64"
+
+      - name: Test ARMv7 cross-compilation
+        run: |
+          docker run --rm \
+            -v $(pwd)/example:/project/src:ro \
+            -v $(pwd)/test-output-armhf:/project/output \
+            -e TARGET=armhf \
+            cpp-builder:cross-test
+
+      - name: Verify ARMv7 binary
+        run: |
+          file test-output-armhf/hello-armhf | grep "ARM"
+
+  # Lint and validate
+  lint:
+    name: Lint and Validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check shell scripts
+        run: |
+          shellcheck *.sh || true
+
+      - name: Validate YAML files
+        run: |
+          # Check if yamllint is available
+          if command -v yamllint &> /dev/null; then
+            yamllint .github/workflows/*.yml
+          fi
+
+      - name: Check documentation links
+        run: |
+          grep -q "CROSS_COMPILE.md" README.md || echo "Warning: CROSS_COMPILE.md not referenced in README"
