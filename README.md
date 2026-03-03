@@ -1,6 +1,12 @@
 # C++ Builder Docker
 
+[![CI/CD](https://github.com/tri2510/cpp-builder-docker/actions/workflows/docker-release.yml/badge.svg)](https://github.com/tri2510/cpp-builder-docker/actions/workflows/docker-release.yml)
+[![Docker](https://ghcr-badge.egul.dev/ghcr.io/tri2510/cpp-builder/latest_tag)](https://github.com/tri2510/cpp-builder-docker/pkgs/container/cpp-builder)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A standardized Docker-based build environment for C++ projects. Build any C++ project consistently across different machines with a single command.
+
+**📦 Pre-built Images:** [ghcr.io/tri2510/cpp-builder](https://github.com/tri2510/cpp-builder-docker/pkgs/container/cpp-builder)
 
 ## Overview
 
@@ -16,6 +22,7 @@ This Docker image provides a complete, isolated build environment for C++ projec
 | **Additional Tools** | ccache, gdb, valgrind, cppcheck |
 | **Cross-Compilation** | ARM64, ARMv7, AMD64 support |
 | **Image Sizes** | ~700MB (native), ~1.3GB (cross-compiler) |
+| **Pre-built Images** | Available on GitHub Container Registry |
 | **Input** | Volume mount your project directory |
 | **Output** | Compiled binaries to mounted output directory |
 
@@ -23,13 +30,27 @@ This Docker image provides a complete, isolated build environment for C++ projec
 
 ## Quick Start
 
-### 1. Clone or Copy This Project
+### Option A: Use Pre-built Images (Recommended)
 
 ```bash
-cd cpp-builder-docker
+# Pull from GitHub Container Registry
+docker pull ghcr.io/tri2510/cpp-builder:1.0.2
+
+# Native build
+docker run --rm \
+  -v $(pwd)/project:/project/src:ro \
+  -v $(pwd)/output:/project/output \
+  ghcr.io/tri2510/cpp-builder:1.0.2
+
+# Cross-compile for ARM64
+docker run --rm \
+  -v $(pwd)/project:/project/src:ro \
+  -v $(pwd)/output:/project/output \
+  -e TARGET=arm64 \
+  ghcr.io/tri2510/cpp-builder:1.0.2-cross
 ```
 
-### 2. Build the Docker Image
+### Option B: Build Locally
 
 Choose the image you need:
 
@@ -41,7 +62,7 @@ docker build -t cpp-builder:latest .
 docker build -f Dockerfile.cross -t cpp-builder:cross .
 ```
 
-### 3. Run the Example Build
+### Run the Example Build (if building locally)
 
 ```bash
 # Using the convenience script
@@ -57,7 +78,7 @@ docker run --rm \
   cpp-builder:latest
 ```
 
-### 4. Run the Compiled Binary
+### Run the Compiled Binary
 
 ```bash
 ./output/hello
@@ -235,8 +256,24 @@ Need to build for different architectures? See [CROSS_COMPILE.md](CROSS_COMPILE.
 
 ### Quick Example: Build for Raspberry Pi
 
+Using pre-built images:
+
 ```bash
-# Build the cross-compiler image
+# Pull cross-compiler image
+docker pull ghcr.io/tri2510/cpp-builder:1.0.2-cross
+
+# Cross-compile for ARM64 (Raspberry Pi 4/5)
+docker run --rm \
+  -v ./project:/project/src:ro \
+  -v ./output:/project/output \
+  -e TARGET=arm64 \
+  ghcr.io/tri2510/cpp-builder:1.0.2-cross
+```
+
+Or build locally:
+
+```bash
+# Build cross-compiler image
 docker build -f Dockerfile.cross -t cpp-builder:cross .
 
 # Cross-compile for ARM64 (Raspberry Pi 4/5)
@@ -272,6 +309,8 @@ docker run --rm \
 
 > **Automated Docker Publishing:** This project includes GitHub Actions workflows that automatically build and publish Docker images on release tags. See [GITHUB_ACTIONS.md](GITHUB_ACTIONS.md) for setup.
 
+> **Pre-built Images:** Use `ghcr.io/tri2510/cpp-builder:1.0.2` (native) or `ghcr.io/tri2510/cpp-builder:1.0.2-cross` (cross-compiler) directly from GitHub Container Registry.
+
 ### Manual CI/CD Examples
 
 For other CI systems or custom workflows:
@@ -294,7 +333,7 @@ jobs:
           docker run --rm \
             -v ${{ github.workspace }}:/project/src:ro \
             -v ${{ github.workspace }}/artifacts:/project/output \
-            ghcr.io/username/cpp-builder:latest
+            ghcr.io/tri2510/cpp-builder:1.0.2
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -448,19 +487,21 @@ git push origin v1.0.0
 
 ### Setup Required
 
-See [GITHUB_ACTIONS.md](GITHUB_ACTIONS.md) for complete setup:
+Using GitHub Container Registry (GHCR) - no secrets needed! The workflow uses your existing GitHub token.
 
-1. Add `DOCKER_USERNAME` and `DOCKER_PASSWORD` secrets to your repository
-2. Push a version tag to trigger the workflow
+For Docker Hub instead, see [GITHUB_ACTIONS.md](GITHUB_ACTIONS.md) for setup.
 
 ### Pre-built Images
 
-If using official pre-built images:
+Images are available on GitHub Container Registry:
 
 ```bash
+# Pull specific version
+docker pull ghcr.io/tri2510/cpp-builder:1.0.2
+docker pull ghcr.io/tri2510/cpp-builder:1.0.2-cross
+
 # Pull latest
-docker pull yourusername/cpp-builder:latest
-docker pull yourusername/cpp-builder:cross
+docker pull ghcr.io/tri2510/cpp-builder:latest
 ```
 
 ---
