@@ -4,8 +4,6 @@
 
 Base URL: `https://aoscloud.io:10000/api/v10/`
 
-![Swagger UI](swagger-ui.png)
-
 Full API documentation available at: **AosEdge REST API - Swagger UI**
 
 ---
