@@ -1,0 +1,59 @@
+# AosEdge Build & Deploy Pipeline
+# Orchestrates: cpp-builder → aos-signer → deployer
+
+services:
+  # ============================================
+  # Step 1: Build C++ Application
+  # ============================================
+  builder:
+    image: ghcr.io/tri2510/cpp-builder:1.0.2
+    container_name: aos-builder
+    volumes:
+      - ./example/aosservice:/project/src:ro
+      - ./artifacts/build:/project/output
+    environment:
+      - TARGET=${TARGET:-amd64}
+      - CMAKE_BUILD_TYPE=Release
+    networks:
+      - aos-pipeline
+
+  # ============================================
+  # Step 2: Sign Binary (Mock for testing)
+  # ============================================
+  signer:
+    image: aos-signer:latest
+    container_name: aos-signer
+    volumes:
+      - ./artifacts/build/usr/local:/input:ro
+      - ./artifacts/signed:/output
+    command: ["/input/aos-agent", "/output/aos-agent.signed"]
+    depends_on:
+      builder:
+        condition: service_completed_successfully
+    networks:
+      - aos-pipeline
+
+  # ============================================
+  # Step 3: Deploy to AosEdge API
+  # ============================================
+  deployer:
+    image: aos-deployer:latest
+    container_name: aos-deployer
+    build:
+      context: ./deployer
+      dockerfile: Dockerfile
+    volumes:
+      - ./artifacts/signed:/input:ro
+    environment:
+      - AOS_API_URL=${AOS_API_URL:-https://aoscloud.io:10000/api/v10}
+      - UNIT_ID=${UNIT_ID}
+      - SUBJECT_ID=${SUBJECT_ID}
+    depends_on:
+      signer:
+        condition: service_completed_successfully
+    networks:
+      - aos-pipeline
+
+networks:
+  aos-pipeline:
+    driver: bridge
