@@ -85,6 +85,9 @@ if [ -f "${SRC_DIR}/CMakeLists.txt" ]; then
         fi
     done
 
+    # Make output files writable by host user
+    chmod -R a+rw "${OUTPUT_DIR}"
+
     echo "Cross-compilation completed successfully!"
     ls -lh "${OUTPUT_DIR}"
 
@@ -116,6 +119,9 @@ else
         ${CPP_COMPILER} -std=c++17 -O2 -Wall -Wextra \
             "${cpp_file}" -o "${OUTPUT_DIR}/${filename}-${TARGET}"
     done
+
+    # Make output files writable by host user
+    chmod -R a+rw "${OUTPUT_DIR}"
 
     echo "Build completed!"
     ls -lh "${OUTPUT_DIR}"

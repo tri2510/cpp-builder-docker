@@ -40,6 +40,9 @@ if [ -f "${SRC_DIR}/CMakeLists.txt" ]; then
     find . -maxdepth 1 -name "*.a" -exec cp {} "${OUTPUT_DIR}/" \;
     find . -maxdepth 1 -name "*.so" -exec cp {} "${OUTPUT_DIR}/" \;
 
+    # Make output files writable by host user
+    chmod -R a+rw "${OUTPUT_DIR}"
+
     echo "Build completed successfully!"
     ls -lh "${OUTPUT_DIR}"
 
@@ -50,6 +53,9 @@ elif [ -f "${SRC_DIR}/Makefile" ]; then
 
     # Copy binaries to output (assumes binaries in current dir or common locations)
     find . -maxdepth 1 -type f -executable -exec cp {} "${OUTPUT_DIR}/" \;
+
+    # Make output files writable by host user
+    chmod -R a+rw "${OUTPUT_DIR}"
 
     echo "Build completed successfully!"
     ls -lh "${OUTPUT_DIR}"
@@ -72,6 +78,9 @@ else
         echo "Compiling ${cpp_file} -> ${OUTPUT_DIR}/${filename}"
         g++ -std=c++17 -O2 -Wall -Wextra "${cpp_file}" -o "${OUTPUT_DIR}/${filename}"
     done
+
+    # Make output files writable by host user
+    chmod -R a+rw "${OUTPUT_DIR}"
 
     echo "Build completed successfully!"
     ls -lh "${OUTPUT_DIR}"
