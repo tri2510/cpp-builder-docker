@@ -8,6 +8,44 @@ A standardized Docker-based build environment for C++ projects. Build any C++ pr
 
 **📦 Pre-built Images:** [ghcr.io/tri2510/cpp-builder](https://github.com/tri2510/cpp-builder-docker/pkgs/container/cpp-builder)
 
+---
+
+## AosEdge Deployment Pipeline
+
+This repository is part of the **AosEdge deployment pipeline**:
+
+```
+┌──────────────────┐      ┌──────────────────┐      ┌──────────────────┐
+│  cpp-builder     │ ───▶ │   aos-signer     │ ───▶ │  aos-deployer   │
+│                  │      │                  │      │                  │
+│  Build C++ apps  │      │  Sign binaries   │      │  Deploy to units │
+│  (this repo)     │      │  (aos-tools)     │      │  (aos-tools)     │
+└──────────────────┘      └──────────────────┘      └──────────────────┘
+```
+
+**Quick Start - Full Pipeline:**
+
+```bash
+# 1. Build C++ application
+docker run --rm \
+  -v $(pwd)/myapp:/project/src:ro \
+  -v $(pwd)/artifacts/build:/project/output \
+  ghcr.io/tri2510/cpp-builder:latest
+
+# 2. Sign with aos-signer
+aos-signer --input artifacts/build/myapp --output artifacts/signed/myapp.signed
+
+# 3. Deploy with aos-deployer
+aos-deployer --input artifacts/signed/myapp.signed --unit-id unit-001
+```
+
+See [docs/Pipeline_Guide.md](docs/Pipeline_Guide.md) for the complete pipeline documentation.
+
+**Related Repositories:**
+- [aos-tools](https://github.com/tri2510/aos-tools) - Signing and deployment tools
+
+---
+
 ## Overview
 
 This Docker image provides a complete, isolated build environment for C++ projects. Simply mount your source code, and it will automatically detect your build system (CMake, Make, or plain .cpp files) and produce compiled binaries.
